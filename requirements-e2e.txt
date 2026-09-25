@@ -1,0 +1,2 @@
+# Optional UI smoke tests; not required to run the app.
+playwright==1.57.0

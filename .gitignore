@@ -1,0 +1,23 @@
+node_modules/
+dist/
+artifacts/
+coverage/
+test-results/
+playwright-report/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+# Never commit a family's exported data or recordings.
+backups/
+recordings/
+private-data/
+peibu-backup-*.json
+
+# Local Python / TypeScript tooling.
+__pycache__/
+*.py[cod]
+.venv/
+*.tsbuildinfo

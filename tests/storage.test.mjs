@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { LocalRepository, STORAGE_KEY } from '../dist/assets/infrastructure/storage.js';
+import { emptyState } from '../dist/assets/domain/planner.js';
+function memory() { const data = new Map(); return { getItem: k => data.get(k) ?? null, setItem: (k, v) => data.set(k, v) }; }
+test('first run loads fallback and then saves explicitly', () => { const m = memory(); const r = new LocalRepository(m); const result = r.load(emptyState); assert.equal(result.warning, ''); assert.equal(m.getItem(STORAGE_KEY), null); r.save(result.state); assert.ok(m.getItem(STORAGE_KEY)); });
+test('corrupt local data is preserved and cannot be silently overwritten', () => { const m = memory(); m.setItem(STORAGE_KEY, '{broken'); const r = new LocalRepository(m); const result = r.load(emptyState); assert.ok(result.warning); assert.equal(result.raw, '{broken'); assert.throws(() => r.save(result.state)); assert.equal(m.getItem(STORAGE_KEY), '{broken'); });
+test('unknown backup version remains untouched', () => { const m = memory(); const raw = '{"schemaVersion":999}'; m.setItem(STORAGE_KEY, raw); const r = new LocalRepository(m); assert.ok(r.load(emptyState).warning); assert.throws(() => r.save(emptyState())); assert.equal(m.getItem(STORAGE_KEY), raw); });
+test('concurrent tabs cannot silently overwrite each other', () => { const m = memory(); const a = new LocalRepository(m); const b = new LocalRepository(m); a.load(emptyState); b.load(emptyState); const s = emptyState(); a.save(s); assert.throws(() => b.save(s), /其他分頁/); });
+test('normal sequential saves update the base revision', () => { const m = memory(); const r = new LocalRepository(m); const s = r.load(emptyState).state; r.save(s); r.save({ ...s, revision: 1 }); assert.equal(JSON.parse(m.getItem(STORAGE_KEY)).revision, 1); });
+test('read denial falls back with an explicit warning', () => { const r = new LocalRepository({ getItem() { throw new Error('blocked'); }, setItem() {} }); const result = r.load(emptyState); assert.ok(result.warning); assert.throws(() => r.save(result.state)); });
+test('quota failure propagates instead of claiming success', () => { const r = new LocalRepository({ getItem() { return null; }, setItem() { throw new Error('QuotaExceededError'); } }); r.load(emptyState); assert.throws(() => r.save(emptyState()), /Quota/); });
+test('invalid app state is rejected before writing', () => { const m = memory(); const r = new LocalRepository(m); r.load(emptyState); assert.throws(() => r.save({ ...emptyState(), revision: -1 })); assert.equal(m.getItem(STORAGE_KEY), null); });
