@@ -1,0 +1,17 @@
+name: 改善提案
+description: 從具體使用情境提出改進
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 哪個使用者，在什麼情境遇到什麼困難？
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: 怎樣的結果才算改善？
+  - type: textarea
+    id: safety
+    attributes:
+      label: 是否涉及帳號、分享、外部上傳或資料變更？

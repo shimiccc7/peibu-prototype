@@ -1,0 +1,11 @@
+import { spawnSync } from 'node:child_process';
+import { cp, mkdir } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { resolve, dirname } from 'node:path';
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const result = spawnSync(process.execPath, [resolve(root, 'node_modules/typescript/bin/tsc')], { cwd: root, stdio: 'inherit' });
+if (result.status !== 0) process.exit(result.status ?? 1);
+await mkdir(resolve(root, 'dist'), { recursive: true });
+await cp(resolve(root, 'index.html'), resolve(root, 'dist/index.html'));
+await cp(resolve(root, 'src/styles.css'), resolve(root, 'dist/assets/styles.css'));
+console.log('Built dist/ (TypeScript ES modules; zero runtime dependencies).');
