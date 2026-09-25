@@ -21,3 +21,7 @@ __pycache__/
 *.py[cod]
 .venv/
 *.tsbuildinfo
+
+# Generated static deployment and local Vercel project metadata.
+site/
+.vercel/
